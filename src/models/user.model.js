@@ -22,6 +22,11 @@ const userSchema = new Schema({
         required: [true, 'password is required'],
 
     },
+    role: {
+        type: String,
+        enum: ['admin', 'teacher', 'learner'],
+        required: true
+    },
     avatar: {
         type: String,
     },

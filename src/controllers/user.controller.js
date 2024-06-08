@@ -17,43 +17,58 @@ const genAccAndRefToken = async (userId) => {
 
 //signUp or registration
 const signUp = asyncHandler(async (req, res, next) => {
+
     const { fullName, userName, email, password } = req.body;
+    console.log('req-body: ', req.body)
+    // console.log('fullname: ', fullName)
     if (
-        [fullName, userName, email, password].some((fields) =>
-            fields.trim() === ''
+        [fullName, userName, email, password].some((fields) => {
+            try {               // try/catch handls the typeError if fields is undefined 
+                return fields.trim() === ''     //removing spacess and checking the field is empty or not
+            } catch (error) {
+                return true;                   //if fields is undefine return false 
+            }
+        }
         )
     ) {
-        throw new ApiError(400, 'fill the required fields ')
+        throw new ApiError(400, 'fill the required fields ')  //if statement
     }
-    //checking the user is already exist or not 
+    //checking the user is already exist or not  in the database 
     const exisedUser = await User.findOne({
         $or: [{ userName }, { email }]
     })
     if (exisedUser) {
         throw new ApiError(409, "user is already exist")
     }
-    let avatarLocalPath;
-    if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
-        avatarLocalPath = files.avatar[0].path
+    const role = 'learner';         //defining the role of user 
+
+    let avatarLocalPath = null;
+    // console.log('local path : ', avatarLocalPath)
+    if (req.files && req.files.avatar) {
+        avatarLocalPath = req.files.avatar[0].path
+        console.log('avatar : ', avatarLocalPath)
     }
     else {
+        console.log('avatar is undefine req not get')
         avatarLocalPath = '';
     }
-
     const avatar = await uploadOnCloudinary(avatarLocalPath);
+    // console.log("avatar file from cloudinary :  ", avatar) 
+    //checking cloudinary     response
 
     const user = await User.create({
         fullName,
         userName: userName.toLowerCase(),
         email,
         password,
-        avatar: avatar?.url || ''
+        role,
+        avatar: avatar?.url || ''          //if avatar is present only then adding its url
     })
 
 
-    const createdUser = await User.fineById(user_id).select("-password -refreshToken")
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
-    res.status(201).json(
+    return res.status(201).json(
         new ApiResponse(201, createdUser, "signup successfully")
 
     )
@@ -62,13 +77,18 @@ const signUp = asyncHandler(async (req, res, next) => {
 
 // login
 const login = asyncHandler(async (req, res, next) => {
-    const { userName, password } = req.body
-    if (!userName || !password) {
+    const { userName, password } = JSON.parse(req.body)
+    if (!(userName || email) || !password) {
         throw new ApiError(401, 'All field required')
 
     }
 
-    const currentUser = await User.findOne(userName)
+    const currentUser = await User.findOne(
+        {
+            $or: [{ email }, { userName }]
+        }
+    )
+
     if (!currentUser) {
         throw new ApiError(401, 'user not found')
     }

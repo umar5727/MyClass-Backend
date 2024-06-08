@@ -6,7 +6,6 @@ dotenv.config({
     path: './.env'
 })
 
-console.log("env port variable : ", process.env.PORT)
 connectDB()
     .then(() => {
         app.on('error', (err) => {

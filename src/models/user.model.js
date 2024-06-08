@@ -2,6 +2,12 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 const userSchema = new Schema({
+    fullName: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true
+    },
     userName: {
         type: String,
         unique: true,
@@ -24,7 +30,7 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'teacher', 'learner'],
+        enum: ['admin', 'instructor', 'learner'],
         required: true
     },
     avatar: {

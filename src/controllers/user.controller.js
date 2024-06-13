@@ -19,6 +19,7 @@ const genAccAndRefToken = async (userId) => {
 const signUp = asyncHandler(async (req, res, next) => {
 
     const { fullName, userName, email, password } = req.body;
+    let {role} = req.body;
     console.log('req-body: ', req.body)
     // console.log('fullname: ', fullName)
     if (
@@ -40,7 +41,9 @@ const signUp = asyncHandler(async (req, res, next) => {
     if (exisedUser) {
         throw new ApiError(409, "user is already exist")
     }
-    const role = 'learner';         //defining the role of user 
+    if (!role) {
+        role = 'learner';         //defining the role of user 
+    }
 
     let avatarLocalPath = null;
     // console.log('local path : ', avatarLocalPath)
@@ -77,7 +80,9 @@ const signUp = asyncHandler(async (req, res, next) => {
 
 // login
 const login = asyncHandler(async (req, res, next) => {
-    const { userName, password } = JSON.parse(req.body)
+    const { userName, email, password } = req.body
+    console.log('req.body: ', req.body)
+    console.log('\nlogin details: \n ' + userName + " - " + email + " - " + password)
     if (!(userName || email) || !password) {
         throw new ApiError(401, 'All field required')
 
@@ -101,15 +106,15 @@ const login = asyncHandler(async (req, res, next) => {
 
     // db call 'getting user without password and refresh token'
     const loginUser = User.findById(currentUser._id).select("--password --refreshToken")
-
+    console.log('\n loginUser from database: '+loginUser)
     const options = {
         httpOnly: true,
         secure: true
     }
     return res
         .status(200)
-        .cookies('accessToken', accessToken, options)
-        .cookies('refreshToken', refreshToken, options)
+        .cookie('accessToken', accessToken, options)
+        .cookie('refreshToken', refreshToken, options)
         .json(
             new ApiResponse(
                 201,

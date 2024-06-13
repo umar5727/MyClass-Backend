@@ -19,7 +19,7 @@ router.route('/register').post(
     , signUp
 )
 
-//router.route('/login').post(login)
+router.route('/login').post(login)
 
 //secure route
 router.route('/logout').post(verifyJWT, logOut)

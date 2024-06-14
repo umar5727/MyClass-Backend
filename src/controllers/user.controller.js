@@ -19,7 +19,7 @@ const genAccAndRefToken = async (userId) => {
 const signUp = asyncHandler(async (req, res, next) => {
 
     const { fullName, userName, email, password } = req.body;
-    let {role} = req.body;
+    let { role } = req.body;
     console.log('req-body: ', req.body)
     // console.log('fullname: ', fullName)
     if (
@@ -79,7 +79,7 @@ const signUp = asyncHandler(async (req, res, next) => {
 )
 
 // login
-const login = asyncHandler(async (req, res, next) => {
+const login = asyncHandler(async (req, res) => {
     const { userName, email, password } = req.body
     console.log('req.body: ', req.body)
     console.log('\nlogin details: \n ' + userName + " - " + email + " - " + password)
@@ -88,11 +88,9 @@ const login = asyncHandler(async (req, res, next) => {
 
     }
 
-    const currentUser = await User.findOne(
-        {
-            $or: [{ email }, { userName }]
-        }
-    )
+    const currentUser = await User.findOne({
+        $or: [{ userName: userName }, { email: email }]
+    })
 
     if (!currentUser) {
         throw new ApiError(401, 'user not found')
@@ -105,8 +103,8 @@ const login = asyncHandler(async (req, res, next) => {
     const { accessToken, refreshToken } = await genAccAndRefToken(currentUser._id)
 
     // db call 'getting user without password and refresh token'
-    const loginUser = User.findById(currentUser._id).select("--password --refreshToken")
-    console.log('\n loginUser from database: '+loginUser)
+    const loginUser = User.findById(currentUser._id).select("-password -refreshToken")
+    console.log('\n loginUser from database: ' + loginUser)
     const options = {
         httpOnly: true,
         secure: true

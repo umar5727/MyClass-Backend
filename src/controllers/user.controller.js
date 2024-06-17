@@ -89,7 +89,7 @@ const login = asyncHandler(async (req, res) => {
     }
 
     const currentUser = await User.findOne({
-        $or: [{ userName: userName }, { email: email }]
+        $or: [{ userName }, { email }]
     })
 
     if (!currentUser) {
@@ -103,7 +103,8 @@ const login = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await genAccAndRefToken(currentUser._id)
 
     // db call 'getting user without password and refresh token'
-    const loginUser = User.findById(currentUser._id).select("-password -refreshToken")
+    const loginUser = await User.findById(currentUser._id).select("--password --refreshToken")
+    // i have not add 'await'while finding user findById 
     console.log('\n loginUser from database: ' + loginUser)
     const options = {
         httpOnly: true,

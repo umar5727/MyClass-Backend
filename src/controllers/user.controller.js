@@ -23,7 +23,7 @@ const signUp = asyncHandler(async (req, res, next) => {
     console.log('req-body: ', req.body)
     // console.log('fullname: ', fullName)
     if (
-        [fullName, userName, email, password].some((fields) => {
+        [fullName, email, password].some((fields) => {
             try {               // try/catch handls the typeError if fields is undefined 
                 return fields.trim() === ''     //removing spacess and checking the field is empty or not
             } catch (error) {
@@ -84,7 +84,8 @@ const login = asyncHandler(async (req, res) => {
     console.log('req.body: ', req.body)
     console.log('\nlogin details: \n ' + userName + " - " + email + " - " + password)
     if (!(userName || email) || !password) {
-        throw new ApiError(401, 'All field required')
+        res.status(401).json({ message: 'All field required' })
+        return;
 
     }
 
@@ -93,17 +94,19 @@ const login = asyncHandler(async (req, res) => {
     })
 
     if (!currentUser) {
-        throw new ApiError(401, 'user not found')
+        res.status(401).json({ message: 'Sorry, looks like that’s the wrong email or password.' })
+        return; //exit the function if not found the user
     }
     const checkpassword = await currentUser.checkPassword(password)
     if (!checkpassword) {
-        throw new ApiError(400, 'incorrect password')
+        res.status(401).json({ message: 'incorrect password' })
+        return; //exit the function if password is incorrect
     }
     //generation tokens
     const { accessToken, refreshToken } = await genAccAndRefToken(currentUser._id)
 
     // db call 'getting user without password and refresh token'
-    const loginUser = await User.findById(currentUser._id).select("--password --refreshToken")
+    const loginUser = await User.findById(currentUser._id).select("-password -refreshToken")
     // i have not add 'await'while finding user findById 
     console.log('\n loginUser from database: ' + loginUser)
     const options = {

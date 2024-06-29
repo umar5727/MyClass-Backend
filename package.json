@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon  -r dotenv/config --experimental-json-modules src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "keywords": [
     "node",
@@ -25,7 +25,7 @@
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
-    "prettier": "^3.2.5"
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.2"
   }
 }

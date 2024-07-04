@@ -1,1 +1,1 @@
-export const DB_Name = "Institute"
+export const DB_Name = "myclass"

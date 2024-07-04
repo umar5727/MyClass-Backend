@@ -18,7 +18,7 @@ const genAccAndRefToken = async (userId) => {
 //signUp or registration
 const signUp = asyncHandler(async (req, res, next) => {
 
-    const { fullName, userName, email, password } = req.body;
+    const { fullName, email, password } = req.body;
     let { role } = req.body;
     console.log('req-body: ', req.body)
     // console.log('fullname: ', fullName)
@@ -36,10 +36,13 @@ const signUp = asyncHandler(async (req, res, next) => {
     }
     //checking the user is already exist or not  in the database 
     const exisedUser = await User.findOne({
-        $or: [{ userName }, { email }]
+        email
     })
     if (exisedUser) {
-        throw new ApiError(409, "user is already exist")
+        // throw new ApiError(409, "user is already exist")
+        console.log('user exist', exisedUser)
+        res.status(400).json({ message: 'user is already exist' })
+        return;
     }
     if (!role) {
         role = 'learner';         //defining the role of user 
@@ -56,12 +59,11 @@ const signUp = asyncHandler(async (req, res, next) => {
         avatarLocalPath = '';
     }
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-    // console.log("avatar file from cloudinary :  ", avatar) 
+    console.log("avatar file from cloudinary :  ", avatar)
     //checking cloudinary     response
 
     const user = await User.create({
         fullName,
-        userName: userName.toLowerCase(),
         email,
         password,
         role,
@@ -90,13 +92,19 @@ const login = asyncHandler(async (req, res) => {
     }
 
     const currentUser = await User.findOne({
-        $or: [{ userName }, { email }]
+        email
     })
 
     if (!currentUser) {
-        res.status(401).json({ message: 'Sorry, looks like that’s the wrong email or password.' })
+        res.status(401).json({ message: 'Sorry, looks like that’s the wrong email ' })
         return; //exit the function if not found the user
     }
+
+    if (currentUser.role === 'instructor' && !currentUser.approved) {
+        res.status(401).json({ message: "Welcome to our learning community! We're excited to have you on board. Your profile is currently under review, and we aim to approve new profiles within [estimated timeframe]. In the meantime, you can browse our course catalog and get familiar with the platform!" })
+        return;
+    }
+
     const checkpassword = await currentUser.checkPassword(password)
     if (!checkpassword) {
         res.status(401).json({ message: 'incorrect password' })
@@ -127,7 +135,7 @@ const login = asyncHandler(async (req, res) => {
 })
 //logout
 
-const logOut = asyncHandler(async (req, res, next) => {
+const signOut = asyncHandler(async (req, res, next) => {
     await User.findByIdAndUpdate(
         req._id,
         {
@@ -145,7 +153,7 @@ const logOut = asyncHandler(async (req, res, next) => {
         httpOnly: true,
         secure: true
     }
-
+    console.log("signout")
     return res
         .status(200)
         .clearCookies("accessToken", options)
@@ -154,4 +162,4 @@ const logOut = asyncHandler(async (req, res, next) => {
             new ApiResponse(200, '', 'user logged out ')
         )
 })
-export { signUp, login, logOut }
+export { signUp, login, signOut }

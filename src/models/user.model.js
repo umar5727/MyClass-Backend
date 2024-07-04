@@ -8,13 +8,6 @@ const userSchema = new Schema({
         lowercase: true,
         trim: true
     },
-    userName: {
-        type: String,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        index: true
-    },
     email: {
         type: String,
         unique: true,
@@ -32,8 +25,21 @@ const userSchema = new Schema({
         enum: ['admin', 'instructor', 'learner'],
         required: true
     },
+    verified: {
+        type: Boolean,
+        default: false
+    },
+    approved: {
+        type: Boolean,
+        default: false
+    },
+
     avatar: {
         type: String,
+    },
+    watchHistory: {
+        type: String,
+
     },
     refreshToken: {
         type: String
@@ -58,7 +64,6 @@ userSchema.methods.genAccToken = async function () {
     return jwt.sign(
         {
             id: this.id,
-            userName: this.userName,
             fullName: this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,

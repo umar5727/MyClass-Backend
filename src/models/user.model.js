@@ -37,10 +37,12 @@ const userSchema = new Schema({
     avatar: {
         type: String,
     },
-    watchHistory: {
-        type: String,
-
-    },
+    watchHistory: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'course'
+        }
+    ],
     refreshToken: {
         type: String
     }
@@ -63,7 +65,7 @@ userSchema.methods.checkPassword = async function (password) {
 userSchema.methods.genAccToken = async function () {
     return jwt.sign(
         {
-            id: this.id,
+            _id: this._id,
             fullName: this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,
@@ -76,7 +78,7 @@ userSchema.methods.genAccToken = async function () {
 userSchema.methods.genRefToken = async function () {
     return jwt.sign(
         {
-            id: this.id,
+            _id: this._id,          // _id mongodb id
 
         },
         process.env.ACCESS_TOKEN_SECRET,

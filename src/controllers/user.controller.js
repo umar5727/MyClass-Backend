@@ -7,10 +7,13 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 // common function that generate access and refresh token
 const genAccAndRefToken = async (userId) => {
     const exisedUser = await User.findById(userId);
-    const accessToken = exisedUser.genAccToken()
-    const refreshToken = exisedUser.genRefToken()
+
+    const accessToken = await exisedUser.genAccToken()
+    const refreshToken = await exisedUser.genRefToken()
 
     exisedUser.refreshToken = refreshToken
+
+    console.log('token now:  ', accessToken)
     await exisedUser.save({ validateBeforeSave: false })
     return { accessToken, refreshToken }
 }
@@ -101,7 +104,7 @@ const login = asyncHandler(async (req, res) => {
     }
 
     if (currentUser.role === 'instructor' && !currentUser.approved) {
-        res.status(401).json({ message: "Welcome to our learning community! We're excited to have you on board. Your profile is currently under review, and we aim to approve new profiles within [estimated timeframe]. In the meantime, you can browse our course catalog and get familiar with the platform!" })
+        res.status(401).json({ message: "Welcome to our learning community. Your profile is currently under review, and you can Login once your profile is approved by team. In the meantime, you can browse our course catalog and get familiar with the platform!" })
         return;
     }
 
@@ -121,10 +124,11 @@ const login = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
+    // res.cookie('accessToken', accessToken).json({ accessToken: accessToken })
     return res
         .status(200)
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', refreshToken, options)
+        .cookie('accessToken', { accessToken, options })
+        .cookie('refreshToken', { refreshToken, options })
         .json(
             new ApiResponse(
                 201,
@@ -149,15 +153,15 @@ const signOut = asyncHandler(async (req, res, next) => {
 
     )
 
-    options = {
+    const options = {
         httpOnly: true,
         secure: true
     }
     console.log("signout")
     return res
         .status(200)
-        .clearCookies("accessToken", options)
-        .clearCookies("refreshToken", options)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
         .json(
             new ApiResponse(200, '', 'user logged out ')
         )

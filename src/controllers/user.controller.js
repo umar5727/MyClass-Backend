@@ -3,6 +3,7 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import jwt from 'jsonwebtoken'
 
 // common function that generate access and refresh token
 const genAccAndRefToken = async (userId) => {
@@ -13,7 +14,7 @@ const genAccAndRefToken = async (userId) => {
 
     exisedUser.refreshToken = refreshToken
 
-    console.log('token now:  ', accessToken)
+
     await exisedUser.save({ validateBeforeSave: false })
     return { accessToken, refreshToken }
 }
@@ -166,4 +167,128 @@ const signOut = asyncHandler(async (req, res, next) => {
             new ApiResponse(200, '', 'user logged out ')
         )
 })
-export { signUp, login, signOut }
+
+// refresh accesstoken
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken.refreshToken || req.body.refreshToken
+    console.log("incomming ", incomingRefreshToken)
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "unauthorized request")
+    }
+
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        )
+
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+
+        // if (incomingRefreshToken !== user.refreshToken) {
+        //     throw new ApiError(401, "Refresh token is expired or used")
+
+        // }
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        const { accessToken, refreshToken } = await genAccAndRefToken(user._id)
+
+        return res
+            .status(200)
+            .cookie("accessToken", { accessToken, options })
+            .cookie("refreshToken", { refreshToken, options })
+            .json(
+                new ApiResponse(
+                    200,
+                    { user, accessToken, refreshToken },
+                    "Access token refreshed"
+                )
+            )
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+
+
+})
+
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password")
+    }
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,
+                email: email
+            }
+        },
+        { new: true }
+
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details updated successfully"))
+});
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing")
+    }
+
+    //TODO: delete old image - assignment
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while uploading on avatar")
+
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Avatar image updated successfully")
+        )
+})
+export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar }

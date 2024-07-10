@@ -20,14 +20,14 @@ const courseSchema = new Schema(
         },
         discription: {
             type: String,
-            required: true
+            // required: true
         },
         totalLectures: {
-            type: String,
+            type: Number,
             required: true
         },
         duration: {
-            type: number,
+            type: Number,
             required: true
         },
         department: {
@@ -39,21 +39,26 @@ const courseSchema = new Schema(
             default: 0
         },
         price: {
-            type: number,
+            type: Number,
             required: true
         },
         discountPrice: {
-            type: number,
-            required: true
+            type: Number,
+            // required: true
+        },
+        approved: {
+            type: Boolean,
+            default: false
         },
         isPublished: {
             type: Boolean,
             default: false
         },
         instructor: {
-            type: mongoose.Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: 'User'
         },
+
 
     },
     {

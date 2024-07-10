@@ -20,9 +20,12 @@ app.use(cookieParser())
 //routes import 
 import userRouter from "./routes/user.routes.js"
 import dashboardRouter from "./routes/dashboard.routes.js"
+import courseRouter from "./routes/course.routes.js"
 //routes declaration
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
+
+app.use("/api/v1/courses", courseRouter)
 
 
 export { app }

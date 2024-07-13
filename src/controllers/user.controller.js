@@ -138,7 +138,7 @@ const login = asyncHandler(async (req, res) => {
             )
         )
 })
-//logout
+//logout SARTS
 
 const signOut = asyncHandler(async (req, res, next) => {
     await User.findByIdAndUpdate(
@@ -222,15 +222,15 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
 
-    const user = await User.findById(req.user?._id)
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    const currentUser = await User.findById(req.user?._id)
+    const isPasswordCorrect = await currentUser.isPasswordCorrect(oldPassword)
 
     if (!isPasswordCorrect) {
         throw new ApiError(400, "Invalid old password")
     }
 
-    user.password = newPassword
-    await user.save({ validateBeforeSave: false })
+    currentUser.password = newPassword
+    await currentUser.save({ validateBeforeSave: false })
 
     return res
         .status(200)
@@ -291,4 +291,20 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
             new ApiResponse(200, user, "Avatar image updated successfully")
         )
 })
-export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar }
+
+const forgotPassword = asyncHandler(async (req, res) => {
+    const email = req.body
+    if (!email) {
+        throw new ApiError(400, 'all fields required')
+    }
+    const currentUser = await User.findOne(
+        { email: email }
+    )
+    if (!currentUser) {
+        throw new ApiError(400, 'email is not registerd')
+    }
+
+})
+
+
+export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword }

@@ -1,13 +1,15 @@
 import mongoose, { Schema } from "mongoose";
 
 
-const subscription = new Schema({
-    subscriber: {
+const enrolledSchema = new Schema({
+    endroller: {
         type: Schema.Types.ObjectId,    //student that taken course
         ref: 'User'
     },
     course: {
         type: Schema.Types.ObjectId, //which course taked
-        ref: "course"
+        ref: "Course"
     }
-})
+}, { timestamps: true })
+
+export const Enrolled = mongoose.model('Enrolled', enrolledSchema)

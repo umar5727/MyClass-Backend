@@ -59,4 +59,66 @@ const createCourse = asyncHandler(async (req, res) => {
 
     return res.status(200).json({ course, message: 'successfull' })
 })
+
+
+// const getEnrolledUsers = asyncHandler(async (req, res) => {
+//     const { courseId } = req.params
+//     const { userId } = req.body
+//     if (!courseId?.trim) {
+//         throw new ApiError(400, 'user id not found ')
+//     }
+
+//     const enrolled = await Course.aggregate([
+//         {
+//             $match: {
+//                 _id: courseId
+//             },
+//         },
+//         {
+//             $lookup: {
+//                 from: 'enrolleds',
+//                 localField: "_id",
+//                 foreignField: "course",
+//                 as: 'endrolledUsers'
+//             },
+
+//         },
+//         {
+//             $addFields: {
+//                 endrollersCount: {
+//                     $size: '$endrolledUsers',
+//                 },
+
+//                 isEndrolled: {
+//                     $cond: {
+//                         if: { $in: [userId, "$endrolledUsers.endroller"] },
+//                         then: true,
+//                         else: false
+//                     }
+//                 }
+//             },
+//         },
+
+//         {
+//             $project: {
+
+//                 endrollersCount: 1,
+//                 isEndrolled: 1,
+
+
+//             }
+//         }
+//     ])
+
+//     if (!enrolled?.length) {
+//         console.log("\nenrolled  : ", enrolled)
+//         return res.status(200).json({ enrolled: 0 })
+//     }
+
+//     return res
+//         .status(200)
+//         .json(enrolled[0],)
+// })
+
+
 export { getAllCourses, createCourse }

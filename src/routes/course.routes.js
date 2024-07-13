@@ -17,4 +17,8 @@ router.route('/createCourse').post(
     ])
     , createCourse
 )
+router
+    .route("/:courseId")
+// .post(getEnrolledUsers)
+
 export default router

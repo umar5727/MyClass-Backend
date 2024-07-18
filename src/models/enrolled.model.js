@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 
 const enrolledSchema = new Schema({
-    endroller: {
+    enroller: {
         type: Schema.Types.ObjectId,    //student that taken course
         ref: 'User'
     },

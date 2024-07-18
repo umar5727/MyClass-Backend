@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createCourse, getAllCourses } from "../controllers/course.controller.js";
+import { createCourse, getAllCourses, getEnrolledUsers } from "../controllers/course.controller.js";
 import { Upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 router
     .route('/')
     .get(getAllCourses)
+    .post(getEnrolledUsers)
 
 router.route('/createCourse').post(
     Upload.fields([
@@ -17,8 +18,8 @@ router.route('/createCourse').post(
     ])
     , createCourse
 )
-router
-    .route("/:courseId")
-// .post(getEnrolledUsers)
+// router
+//     .route("/:courseId")
+//     .post(getEnrolledUsers)
 
 export default router

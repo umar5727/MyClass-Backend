@@ -61,64 +61,83 @@ const createCourse = asyncHandler(async (req, res) => {
 })
 
 
-// const getEnrolledUsers = asyncHandler(async (req, res) => {
-//     const { courseId } = req.params
-//     const { userId } = req.body
-//     if (!courseId?.trim) {
-//         throw new ApiError(400, 'user id not found ')
-//     }
+const getEnrolledUsers = asyncHandler(async (req, res) => {
+    const { courseId } = req.params
+    // const { userId } = req.body
+    if (!courseId?.trim) {
+        throw new ApiError(400, 'user id not found ')
+    }
 
-//     const enrolled = await Course.aggregate([
-//         {
-//             $match: {
-//                 _id: courseId
-//             },
-//         },
-//         {
-//             $lookup: {
-//                 from: 'enrolleds',
-//                 localField: "_id",
-//                 foreignField: "course",
-//                 as: 'endrolledUsers'
-//             },
+    const enrolled = await Course.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(courseId)
+            },
+        },
+        {
+            $lookup: {
+                from: 'enrolleds',
+                localField: "_id",
+                foreignField: "course",
+                as: 'endrolledUsers',
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'enroller',
+                            foreignField: '_id',
+                            as: 'courseUserDetails',
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        avatar: 1,
 
-//         },
-//         {
-//             $addFields: {
-//                 endrollersCount: {
-//                     $size: '$endrolledUsers',
-//                 },
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            courseUserDetails: {
+                                $first: '$courseUserDetails'
+                            }
+                        }
+                    }
+                ]
 
-//                 isEndrolled: {
-//                     $cond: {
-//                         if: { $in: [userId, "$endrolledUsers.endroller"] },
-//                         then: true,
-//                         else: false
-//                     }
-//                 }
-//             },
-//         },
+            },
 
-//         {
-//             $project: {
+        },
+        {
+            $addFields: {
+                enrollersCount: {
+                    $size: '$endrolledUsers',
+                },
+            },
+        },
+        // {
+        //     $project: {
 
-//                 endrollersCount: 1,
-//                 isEndrolled: 1,
-
-
-//             }
-//         }
-//     ])
-
-//     if (!enrolled?.length) {
-//         console.log("\nenrolled  : ", enrolled)
-//         return res.status(200).json({ enrolled: 0 })
-//     }
-
-//     return res
-//         .status(200)
-//         .json(enrolled[0],)
-// })
+        //         endrollersCount: 1,
+        //         isEndrolled: 1,
 
 
-export { getAllCourses, createCourse }
+        //     }
+        // }
+    ])
+
+    console.log("pipeline : ", enrolled)
+    //     if (!enrolled?.length) {
+    //         console.log("\nenrolled  : ", enrolled)
+    //         return res.status(200).json({ enrolled: 0 })
+    //     }
+
+    //     return res
+    //         .status(200)
+    //         .json(enrolled[0],)
+})
+
+
+export { getAllCourses, createCourse, getEnrolledUsers }

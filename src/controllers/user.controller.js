@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
@@ -306,5 +307,70 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 })
 
+const userProfile = asyncHandler(async (req, res) => {
+    const { userId } = req.body
+    if (!userId?.trim) {
+        throw new ApiError(400, 'user id not found ')
+    }
+    const userCoursesDetails = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(userId)
+            },
+        },
+        {
+            $lookup: {
+                from: 'enrolleds',
+                localField: "_id",
+                foreignField: "endroller",
+                as: 'userCourses',
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "courses",
+                            localField: "course",
+                            foreignField: "_id",
+                            as: "courseDetails",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        title: 1,
+                                        thumbNail: 1,
+                                        totalLectures: 1
+                                    }
+                                }
+                            ]
+                        }
+                    }, {
+                        $addFields: {
+                            courseDetails: {
+                                $first: "$courseDetails"
 
-export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword }
+                            }
+                        }
+                    }
+                ]
+            },
+
+        },
+        {
+            $addFields: {
+                coursesCount: {
+                    $size: '$userCourses',
+                },
+            },
+        },
+        {
+            $project: {
+                coursesCount: 1,
+                userCourses: 1,
+            }
+        }
+
+    ])
+    const { courseDetails } = userCoursesDetails[0].userCourses
+
+    console.log("pipeline : ", userCoursesDetails[0].userCourses[0].courseDetails)
+    return res.status(200).json({ "userCourses": userCoursesDetails[0].userCourses, 'message': 'all courses details' })
+})
+export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile }

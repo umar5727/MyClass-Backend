@@ -3,6 +3,9 @@ import cookieParser from "cookie-parser";
 import 'dotenv/config';
 import cors from "cors"
 
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+
 const app = express();
 
 app.use(cors({
@@ -16,6 +19,29 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static("public"))
 app.use(cookieParser())
 
+//swagger UI
+
+const swaggerOptions = {
+    definition: {
+      openapi: "3.0.0", // OpenAPI version
+      info: {
+          title: "Fountain API", // Title of the API
+          version: "1.0.0", // Version of the API
+          description: "A simple API documentation", // Description of the API
+      },
+      servers: [
+        {
+          url: "http://localhost:8800", // Your server URL
+        },
+       
+      ],
+      schemes: ["http", "https"],
+    },
+    apis: ["./src/routes/*.js",'./routes/*.js'],
+  };
+  const swaggerDoc = swaggerJSDoc(swaggerOptions);
+  // swagger
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 
 //routes import 

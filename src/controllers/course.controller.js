@@ -8,7 +8,7 @@ import { User } from "../models/user.model.js";
 const getAllCourses = asyncHandler(async (req, res) => {
 
     const courses = await Course.find({}); // Find all documents
-    console.log('all courses : ', courses)
+    // console.log('all courses : ', courses)
 
     if (!courses) {
         // console.error('Error fetching courses:', error);
@@ -128,7 +128,7 @@ const getEnrolledUsers = asyncHandler(async (req, res) => {
         // }
     ])
 
-    console.log("pipeline : ", enrolled)
+    // console.log("pipeline : ", enrolled)
     //     if (!enrolled?.length) {
     //         console.log("\nenrolled  : ", enrolled)
     //         return res.status(200).json({ enrolled: 0 })

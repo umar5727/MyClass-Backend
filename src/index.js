@@ -16,7 +16,7 @@ connectDB()
             console.log("server error", err)
             throw err
         })
-        app.listen(process.env.PORT || 8000, () => {
+        app.listen(process.env.PORT || 8800, () => {
             console.log("surver is running at port : ", process.env.PORT)
         });
     })

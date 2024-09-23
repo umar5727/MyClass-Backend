@@ -19,6 +19,15 @@ const genAccAndRefToken = async (userId) => {
     await exisedUser.save({ validateBeforeSave: false })
     return { accessToken, refreshToken }
 }
+//get all users 
+const getAllUsers = async(req,res,next) =>{
+    const users = await User.find().select('fullName email role verified approved');
+
+    if(!users ){
+        return res.status(400).json({message:'users not found'})
+    }
+    return res.status(200).json({users,message:"all user get success"})
+}
 
 //signUp or registration
 const signUp = asyncHandler(async (req, res, next) => {
@@ -152,9 +161,7 @@ const signOut = asyncHandler(async (req, res, next) => {
         {
             new: true
         }
-
     )
-
     const options = {
         httpOnly: true,
         secure: true
@@ -171,7 +178,7 @@ const signOut = asyncHandler(async (req, res, next) => {
 
 // refresh accesstoken
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken.refreshToken || req.body.refreshToken
+    const incomingRefreshToken = req.cookies.refreshToken?.refreshToken || req.body.refreshToken
     console.log("incomming ", incomingRefreshToken)
     if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request")
@@ -309,7 +316,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 const userProfile = asyncHandler(async (req, res) => {
     const { userId } = req.body
-    if (!userId?.trim) {
+    if (!userId?.trim()) {
         throw new ApiError(400, 'user id not found ')
     }
     const userCoursesDetails = await User.aggregate([
@@ -368,9 +375,82 @@ const userProfile = asyncHandler(async (req, res) => {
         }
 
     ])
-    const { courseDetails } = userCoursesDetails[0].userCourses
+    // const { courseDetails } = userCoursesDetails[0].userCourses
 
     console.log("pipeline : ", userCoursesDetails[0].userCourses[0].courseDetails)
     return res.status(200).json({ "userCourses": userCoursesDetails[0].userCourses, 'message': 'all courses details' })
 })
-export { signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile }
+
+const instructorProfile = asyncHandler(async (req, res) => {
+    const { userId } = req.body
+    console.log(userId)
+    if (!userId) {
+        throw new ApiError(400, 'user id required')
+    }
+
+
+
+    const instructorCoursesDetails = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(userId)
+            },
+        },
+        {
+            $lookup: {
+                from: 'courses',
+                localField: "_id",
+                foreignField: "instructor",
+                as: 'myCourses',
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "enrolleds",
+                            localField: "_id",
+                            foreignField: "course",
+                            as: "enrolledStudents",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        email: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            studentsCount: {
+                                $size: "$enrolledStudents"
+                            },
+                            courseDetails: {
+                                $first: "$enrolledStudents"
+
+                            }
+                        }
+                    }
+                ]
+            },
+
+        },
+        {
+            $addFields: {
+                coursesCount: {
+                    $size: '$myCourses',
+                },
+            },
+        },
+        // {
+        //     $project: {
+        //         enrolledStudents: 1,
+        //         myCourses: 1
+        //     }
+        // }
+
+    ])
+    console.log("\n : ", instructorCoursesDetails[0].myCourses)
+    return res.status(200).json({ "userCourses": instructorCoursesDetails[0].myCourses, 'message': 'all courses details' })
+})
+export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile }

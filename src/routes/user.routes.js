@@ -12,6 +12,91 @@
  */
 // getAllUser swagger ends 
 
+// register swagger  
+/**
+ * @swagger
+ * /api/v1/users/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: API endpoint to register a new user by providing necessary details like full name, email, password, etc.
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullName
+ *               - email
+ *               - password
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: "John Doe"
+ *                 description: "Full name of the user"
+ *               email:
+ *                 type: string
+ *                 example: "johndoe@example.com"
+ *                 description: "Email address of the user"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *                 description: "Password for the user account"
+ *               role:
+ *                 type: string
+ *                 example: "learner"
+ *                 description: "Role of the user, defaults to 'user'"
+ *     responses:
+ *       201:
+ *         description: Successfully registered a new user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User registered successfully"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "615b3c98f70d0015c2b12345"
+ *                     fullName:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     email:
+ *                       type: string
+ *                       example: "johndoe@example.com"
+ *                     role:
+ *                       type: string
+ *                       example: "learner"
+ *       400:
+ *         description: Bad request, validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid input data"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred during registration"
+ */
+
+
 import { Router } from "express";
 import { signOut, login, signUp, refreshAccessToken, updateUserAvatar, updateAccountDetails, changeCurrentPassword, forgotPassword, userProfile, instructorProfile, getAllUsers } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";

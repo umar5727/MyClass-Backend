@@ -67,14 +67,15 @@ const signUp = asyncHandler(async (req, res, next) => {
     if (req.files && req.files.avatar) {
         avatarLocalPath = req.files.avatar[0].path
         console.log('avatar : ', avatarLocalPath)
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+        console.log("avatar file from cloudinary :  ", avatar)
+        //checking cloudinary     response
     }
     else {
         console.log('avatar is undefine req not get')
         avatarLocalPath = '';
     }
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    console.log("avatar file from cloudinary :  ", avatar)
-    //checking cloudinary     response
+   
 
     const user = await User.create({
         fullName,
@@ -453,4 +454,19 @@ const instructorProfile = asyncHandler(async (req, res) => {
     console.log("\n : ", instructorCoursesDetails[0].myCourses)
     return res.status(200).json({ "userCourses": instructorCoursesDetails[0].myCourses, 'message': 'all courses details' })
 })
+
+const userCourses = async (req,res)=>{
+    const {userId} = req.body
+    if(!userId ){
+        return res.status(400).json({message:'user Id required'})
+    }
+    const user = await User.findById(userId)
+    
+    if(!user){
+        return res.status(400).json({message:'user not found'})
+        
+    }
+    const userCourses = await Enrolled.find({enroller:userId})
+    return res.status(200).json({userCourses,message:"user courses found success"})
+}
 export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile }

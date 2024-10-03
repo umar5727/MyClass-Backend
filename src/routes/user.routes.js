@@ -118,7 +118,7 @@
  *             properties:
  *               userId:
  *                 type: string
- *                 example: ""
+ *                 example: "668ae83fb99d2c25d6afc3c2"
  *                 description: "userId to find user"
  *               fullName:
  *                 type: string

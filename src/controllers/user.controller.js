@@ -304,7 +304,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 const forgotPassword = asyncHandler(async (req, res) => {
     const email = req.body
     if (!email) {
-        throw new ApiError(400, 'all fields required')
+        throw new ApiError(400, 'email required')
     }
     const currentUser = await User.findOne(
         { email: email }
@@ -312,7 +312,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     if (!currentUser) {
         throw new ApiError(400, 'email is not registerd')
     }
-
+    // send verification code on uesrs email and then change the password 
 })
 
 const userProfile = asyncHandler(async (req, res) => {
@@ -388,8 +388,6 @@ const instructorProfile = asyncHandler(async (req, res) => {
     if (!userId) {
         throw new ApiError(400, 'user id required')
     }
-
-
 
     const instructorCoursesDetails = await User.aggregate([
         {
@@ -469,4 +467,32 @@ const userCourses = async (req,res)=>{
     const userCourses = await Enrolled.find({enroller:userId})
     return res.status(200).json({userCourses,message:"user courses found success"})
 }
-export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile }
+
+const updateProfile = async (req,res)=>{
+    
+    const {userId,email,fullName} = req.body
+
+    if(!userId && !email && !fullName && !req.files.avatar){
+        return res.status(400).json({message:'required a field'})
+    }
+
+    const user = await User.findById(userId)
+    if(!user){
+        return res.status(400).json({message:'user not found'})
+    }
+    if(fullName){
+        user.fullName = fullName
+    }
+    if(email){
+        user.email = email
+    }
+    if(req.files && req.files.avatar){
+        const avatar = await uploadOnCloudinary(req.files.avatar[0].path)
+        user.avatar = avatar
+    }
+    await user.save()
+    const updatedUser= await User.findById(userId).select('-password')
+
+    return res.status(200).json({user:updatedUser, message:'update successful'})
+}
+export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile,updateProfile }

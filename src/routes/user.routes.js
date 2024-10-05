@@ -212,5 +212,8 @@ router.route('/forgotPassword').patch(forgotPassword)
 
 router.route('/userProfile').post(verifyJWT, userProfile)
 router.route('/instructorProfile').post(verifyJWT, instructorProfile)
-router.route('/updateProfile').post(verifyJWT, updateProfile)
+router.route('/updateProfile').post(
+    Upload.fields([{name:'avatar',maxCount:1}]),
+     verifyJWT, updateProfile
+    )
 export default router

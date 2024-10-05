@@ -470,7 +470,8 @@ const userCourses = async (req,res)=>{
 
 const updateProfile = async (req,res)=>{
     
-    const {userId,email,fullName} = req.body
+    const {userId,email,fullName,contactNumber} = req.body
+    console.log('avatar for user controller : ',req.files.avatar[0].path)
 
     if(!userId && !email && !fullName && !req.files.avatar){
         return res.status(400).json({message:'required a field'})
@@ -480,19 +481,24 @@ const updateProfile = async (req,res)=>{
     if(!user){
         return res.status(400).json({message:'user not found'})
     }
-    if(fullName){
+    if(fullName !== ' ' && fullName){
         user.fullName = fullName
     }
-    if(email){
+    if(email !== ' ' && email){
         user.email = email
+    }
+    if(contactNumber !== ' ' && contactNumber){
+        user.contactNumber = email
     }
     if(req.files && req.files.avatar){
         const avatar = await uploadOnCloudinary(req.files.avatar[0].path)
-        user.avatar = avatar
+        user.avatar = avatar.url
+        console.log('avatar updated',avatar.url)
+
     }
     await user.save()
     const updatedUser= await User.findById(userId).select('-password')
-
+console.log('after update user : ',updatedUser)
     return res.status(200).json({user:updatedUser, message:'update successful'})
 }
 export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile,updateProfile }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createCourse, getAllCourses, getEnrolledUsers } from "../controllers/course.controller.js";
+import { createCourse, getAllCourses, getCourseById, getEnrolledUsers } from "../controllers/course.controller.js";
 import { Upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -18,8 +18,7 @@ router.route('/createCourse').post(
     ])
     , createCourse
 )
-// router
-//     .route("/:courseId")
+router.route("/:courseId").get(getCourseById)
 //     .post(getEnrolledUsers)
 
 export default router

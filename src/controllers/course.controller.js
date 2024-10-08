@@ -4,6 +4,8 @@ import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
+import { Enrolled } from "../models/enrolled.model.js";
+import { totalEnrolls } from "./enrolled.controller.js";
 
 const getAllCourses = asyncHandler(async (req, res) => {
 
@@ -59,7 +61,23 @@ const createCourse = asyncHandler(async (req, res) => {
 
     return res.status(200).json({ course, message: 'successfull' })
 })
+const getCourseById =async (req,res)=>{
+    const { courseId } = req.params
+    console.log('course id ', courseId)
+    const course = await Course.findById(courseId).select('-discription')
+    if(!course){
+        return res.status(400).json({message:'course not found'})
+    }
+    const enrolls = await Enrolled.find({ course: courseId })
+    console.log("enrolls : ", enrolls.length)
+    const totalEnrolls = enrolls.length
+    const courseData = {            
+        ...course.toObject(),      //converting mongoose model to plain object         
+        totalEnrolls                
+    }
 
+    return res.status(200).json({courseData, message: 'success' })
+}
 
 const getEnrolledUsers = asyncHandler(async (req, res) => {
     const { courseId } = req.params
@@ -140,4 +158,4 @@ const getEnrolledUsers = asyncHandler(async (req, res) => {
 })
 
 
-export { getAllCourses, createCourse, getEnrolledUsers }
+export { getAllCourses, createCourse, getEnrolledUsers, getCourseById }

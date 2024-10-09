@@ -134,7 +134,8 @@ const login = asyncHandler(async (req, res) => {
     console.log('\n loginUser from database: ' + loginUser)
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: 'none'
     }
     // res.cookie('accessToken', accessToken).json({ accessToken: accessToken })
     return res

@@ -137,7 +137,6 @@ const login = asyncHandler(async (req, res) => {
         secure: true,
         sameSite: 'none'
     }
-    // res.cookie('accessToken', accessToken).json({ accessToken: accessToken })
     return res
         .status(200)
         .cookie('accessToken', { accessToken, options })

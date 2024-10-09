@@ -7,7 +7,7 @@ const addEnrolled = asyncHandler(async (req, res) => {
     const { userId } = req.body
     const { courseId } = req.params
 
-    console.log(userId, courseId)
+    // console.log(userId, courseId)
     if (!userId || !courseId) {
         throw new ApiError(400, 'Missing required fields ')
     }
@@ -24,7 +24,7 @@ const addEnrolled = asyncHandler(async (req, res) => {
         course: courseId
     }
     )
-    console.log('endrolled user : ', enrolled)
+    // console.log('endrolled user : ', enrolled)
 
     return res.status(200).json('enrolled success')
 })
@@ -33,7 +33,7 @@ const totalEnrolls = asyncHandler(async (req, res) => {
     const { courseId } = req.params
 
     const enrolls = await Enrolled.find({ course: courseId })
-    console.log("enrolls : ", enrolls.length)
+    // console.log("enrolls : ", enrolls.length)
 
     return res.status(200).json({ totalenrolls: enrolls.length, message: 'success' })
 

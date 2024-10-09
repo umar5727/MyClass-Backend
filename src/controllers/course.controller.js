@@ -23,16 +23,14 @@ const getAllCourses = asyncHandler(async (req, res) => {
 })
 const createCourse = asyncHandler(async (req, res) => {
     const { title, shortDescription, difficulty, totalLectures, duration, department, price, instructor } = req.body
-    console.log(
-        'body: ', req.body
-    )
-    console.log("req : ", title, shortDescription, difficulty, totalLectures, duration, department, price)
+    // console.log(     'body: ', req.body    )
+    // console.log("req : ", title, shortDescription, difficulty, totalLectures, duration, department, price)
 
     if (!title || !shortDescription || !difficulty || !totalLectures || !duration || !department || !price) {
         throw new ApiError(401, 'all fields required')
     }
     if (!mongoose.Types.ObjectId.isValid(instructor)) {
-        console.log('error block')
+        // console.log('error block')
         throw new ApiError(401, 'Instrutor not exist')
     }
     const Instructor = await User.findById(instructor, {
@@ -57,19 +55,19 @@ const createCourse = asyncHandler(async (req, res) => {
         thumbNail: thumbNail.url
     })
     const checkedCourse = await Course.findById(course._id)
-    console.log('checked course: ', checkedCourse)
+    // console.log('checked course: ', checkedCourse)
 
     return res.status(200).json({ course, message: 'successfull' })
 })
 const getCourseById =async (req,res)=>{
     const { courseId } = req.params
-    console.log('course id ', courseId)
+    // console.log('course id ', courseId)
     const course = await Course.findById(courseId).select('-discription')
     if(!course){
         return res.status(400).json({message:'course not found'})
     }
     const enrolls = await Enrolled.find({ course: courseId })
-    console.log("enrolls : ", enrolls.length)
+    // console.log("enrolls : ", enrolls.length)
     const totalEnrolls = enrolls.length
     const courseData = {            
         ...course.toObject(),      //converting mongoose model to plain object         

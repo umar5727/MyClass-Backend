@@ -202,7 +202,7 @@ router.route('/register').post(
 router.route('/login').post(login)
 
 //secure route
-router.route('/signOut').get(verifyJWT, signOut)
+router.route('/signOut').post(verifyJWT, signOut)
 router.route('/refreshAccessToken').post(refreshAccessToken)
 router.route("/change-password").post(verifyJWT, changeCurrentPassword)
 router.route("/update-account").patch(verifyJWT, updateAccountDetails)

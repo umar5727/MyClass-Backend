@@ -34,7 +34,7 @@ const signUp = asyncHandler(async (req, res, next) => {
 
     const { fullName, email, password } = req.body;
     let { role } = req.body;
-    console.log('req-body: ', req.body)
+    // console.log('req-body: ', req.body)
     // console.log('fullname: ', fullName)
     if (
         [fullName, email, password].some((fields) => {
@@ -54,7 +54,7 @@ const signUp = asyncHandler(async (req, res, next) => {
     })
     if (exisedUser) {
         // throw new ApiError(409, "user is already exist")
-        console.log('user exist', exisedUser)
+        // console.log('user exist', exisedUser)
         res.status(400).json({ message: 'user is already exist' })
         return;
     }
@@ -66,9 +66,9 @@ const signUp = asyncHandler(async (req, res, next) => {
     // console.log('local path : ', avatarLocalPath)
     if (req.files && req.files.avatar) {
         avatarLocalPath = req.files.avatar[0].path
-        console.log('avatar : ', avatarLocalPath)
+        // console.log('avatar : ', avatarLocalPath)
         const avatar = await uploadOnCloudinary(avatarLocalPath);
-        console.log("avatar file from cloudinary :  ", avatar)
+        // console.log("avatar file from cloudinary :  ", avatar)
         //checking cloudinary     response
     }
     else {
@@ -98,8 +98,8 @@ const signUp = asyncHandler(async (req, res, next) => {
 // login
 const login = asyncHandler(async (req, res) => {
     const { userName, email, password } = req.body
-    console.log('req.body: ', req.body)
-    console.log('\nlogin details: \n ' + userName + " - " + email + " - " + password)
+    // console.log('req.body: ', req.body)
+    // console.log('\nlogin details: \n ' + userName + " - " + email + " - " + password)
     if (!(userName || email) || !password) {
         res.status(401).json({ message: 'All field required' })
         return;
@@ -131,7 +131,7 @@ const login = asyncHandler(async (req, res) => {
     // db call 'getting user without password and refresh token'
     const loginUser = await User.findById(currentUser._id).select("-password -refreshToken")
     // i have not add 'await'while finding user findById 
-    console.log('\n loginUser from database: ' + loginUser)
+    // console.log('\n loginUser from database: ' + loginUser)
     const options = {
         httpOnly: true,
         secure: true,
@@ -167,7 +167,7 @@ const signOut = asyncHandler(async (req, res, next) => {
         httpOnly: true,
         secure: true
     }
-    console.log("signout")
+    // console.log("signout")
     return res
         .status(200)
         .clearCookie("accessToken", options)
@@ -180,8 +180,9 @@ const signOut = asyncHandler(async (req, res, next) => {
 // refresh accesstoken
 const refreshAccessToken = asyncHandler(async (req, res) => {
     // const incomingRefreshToken = req.cookies.refreshToken?.refreshToken || req.body.refreshToken
+    
     const {incomingRefreshToken} = req.body
-    console.log("incomming ", incomingRefreshToken)
+    // console.log("incomming ", incomingRefreshToken)
     if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request")
     }
@@ -379,13 +380,13 @@ const userProfile = asyncHandler(async (req, res) => {
     ])
     // const { courseDetails } = userCoursesDetails[0].userCourses
 
-    console.log("pipeline : ", userCoursesDetails[0].userCourses[0].courseDetails)
+    // console.log("pipeline : ", userCoursesDetails[0].userCourses[0].courseDetails)
     return res.status(200).json({ "userCourses": userCoursesDetails[0].userCourses, 'message': 'all courses details' })
 })
 
 const instructorProfile = asyncHandler(async (req, res) => {
     const { userId } = req.body
-    console.log(userId)
+    // console.log(userId)
     if (!userId) {
         throw new ApiError(400, 'user id required')
     }
@@ -450,7 +451,7 @@ const instructorProfile = asyncHandler(async (req, res) => {
         // }
 
     ])
-    console.log("\n : ", instructorCoursesDetails[0].myCourses)
+    // console.log("\n : ", instructorCoursesDetails[0].myCourses)
     return res.status(200).json({ "userCourses": instructorCoursesDetails[0].myCourses, 'message': 'all courses details' })
 })
 
@@ -472,7 +473,7 @@ const userCourses = async (req,res)=>{
 const updateProfile = async (req,res)=>{
     
     const {userId,email,fullName,contactNumber} = req.body
-    console.log('avatar for user controller : ',req.files.avatar[0].path)
+    // console.log('avatar for user controller : ',req.files.avatar[0]?.path)
 
     if(!userId && !email && !fullName && !req.files.avatar){
         return res.status(400).json({message:'required a field'})
@@ -491,15 +492,15 @@ const updateProfile = async (req,res)=>{
     if(contactNumber !== ' ' && contactNumber){
         user.contactNumber = email
     }
-    if(req.files && req.files.avatar){
+    if(req.files && req.files.avatar ){
         const avatar = await uploadOnCloudinary(req.files.avatar[0].path)
         user.avatar = avatar.url
-        console.log('avatar updated',avatar.url)
+        // console.log('avatar updated',avatar.url)
 
     }
     await user.save()
     const updatedUser= await User.findById(userId).select('-password')
-console.log('after update user : ',updatedUser)
+// console.log('after update user : ',updatedUser)
     return res.status(200).json({user:updatedUser, message:'update successful'})
 }
 export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile,updateProfile }

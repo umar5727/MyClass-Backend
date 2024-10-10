@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from 'jsonwebtoken'
+import { Wishlist } from "../models/wishlist.model.js";
 
 // common function that generate access and refresh token
 const genAccAndRefToken = async (userId) => {
@@ -62,20 +63,15 @@ const signUp = asyncHandler(async (req, res, next) => {
         role = 'learner';         //defining the role of user 
     }
 
-    let avatarLocalPath = null;
     // console.log('local path : ', avatarLocalPath)
-    if (req.files && req.files.avatar) {
-        avatarLocalPath = req.files.avatar[0].path
-        // console.log('avatar : ', avatarLocalPath)
-        const avatar = await uploadOnCloudinary(avatarLocalPath);
-        // console.log("avatar file from cloudinary :  ", avatar)
-        //checking cloudinary     response
-    }
-    else {
-        console.log('avatar is undefine req not get')
-        avatarLocalPath = '';
-    }
+    // if (!req.files && !req.files.avatar) {
+    //     console.log('avatar is undefine req not get')
+    //     // avatarLocalPath = '';
+    // }
+    const avatarLocalPath = (!req.files && !req.files.avatar) ? req.files.avatar[0].path : ''
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
    
+  
 
     const user = await User.create({
         fullName,
@@ -85,8 +81,23 @@ const signUp = asyncHandler(async (req, res, next) => {
         avatar: avatar?.url || ''          //if avatar is present only then adding its url
     })
 
+    
+        try {
+            const wishlist  = new Wishlist({        // creating new wishlist 
+                userId: user._id,
+                
+            })
+            await wishlist.save();
 
-    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+            user.wishlist_Id = wishlist._id     // adding wishlit id to user
+            await user.save();
+            console.log('\nwishlist add to user \n')
+        } catch (error) {
+            console.error('Error creating wishlist:', error);
+            throw error;
+        }
+   
+    const createdUser = await User.findById(user._id).select("-password -refreshToken -accessToken")
 
     return res.status(201).json(
         new ApiResponse(201, createdUser, "signup successfully")
@@ -103,7 +114,6 @@ const login = asyncHandler(async (req, res) => {
     if (!(userName || email) || !password) {
         res.status(401).json({ message: 'All field required' })
         return;
-
     }
 
     const currentUser = await User.findOne({
@@ -129,9 +139,12 @@ const login = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await genAccAndRefToken(currentUser._id)
 
     // db call 'getting user without password and refresh token'
-    const loginUser = await User.findById(currentUser._id).select("-password -refreshToken")
-    // i have not add 'await'while finding user findById 
-    // console.log('\n loginUser from database: ' + loginUser)
+    
+    const loginUser = await User.findById(currentUser._id).select("-password -refreshToken -accessToken")
+   
+    const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
+
+console.log('wishlist ',wishlist)
     const options = {
         httpOnly: true,
         secure: true,
@@ -144,7 +157,7 @@ const login = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 201,
-                { user: loginUser, accessToken, refreshToken },
+                { user: loginUser, wishlist:wishlist.coursesId || '', accessToken, refreshToken },
                 'login success'
             )
         )
@@ -199,10 +212,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid refresh token")
         }
 
-        // if (incomingRefreshToken !== user.refreshToken) {
-        //     throw new ApiError(401, "Refresh token is expired or used")
+        if (incomingRefreshToken !== user.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or used")
 
-        // }
+        }
+        
 
         const options = {
             httpOnly: true,
@@ -210,7 +224,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
 
         const { accessToken, refreshToken } = await genAccAndRefToken(user._id)
+
         const updatedUser = await User.findById(user._id)
+        const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
         return res
             .status(200)
             .cookie("accessToken", { accessToken, options })
@@ -218,14 +234,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { user:updatedUser, accessToken, refreshToken },
+                    { user:updatedUser, wishlist:wishlist?.coursesId || '', accessToken, refreshToken },
                     "Access token refreshed"
                 )
             )
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
-
 
 })
 

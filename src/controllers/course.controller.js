@@ -7,20 +7,16 @@ import { User } from "../models/user.model.js";
 import { Enrolled } from "../models/enrolled.model.js";
 import { totalEnrolls } from "./enrolled.controller.js";
 
+
 const getAllCourses = asyncHandler(async (req, res) => {
-
-    const courses = await Course.find({}); // Find all documents
-    // console.log('all courses : ', courses)
-
-    if (!courses) {
-        // console.error('Error fetching courses:', error);
-
+     const courses = await Course.find({}); // Find all documents
+      if (!courses) {
         throw new ApiError(401, error, 'faild to get courses data')
-
     }
-
     return res.status(200).json(courses)
 })
+
+  
 const createCourse = asyncHandler(async (req, res) => {
     const { title, shortDescription, difficulty, totalLectures, duration, department, price, instructor } = req.body
     // console.log(     'body: ', req.body    )
@@ -155,5 +151,57 @@ const getEnrolledUsers = asyncHandler(async (req, res) => {
     //         .json(enrolled[0],)
 })
 
+// const getAllCoursesWithPipeline = asyncHandler(async (req, res) => {
 
+//     try{
+//     const pipeline =[
+//         {
+//             $lookup:{
+//                 from:'user',
+//                 localField:'instructor',
+//                 foreignField: '_id',
+//                 as:'instructorData'
+//         },
+//     },
+//         {
+//             $unwind:'$instructorData'
+//         },
+//         {
+//             $lookup: {
+//               from: 'userWishlists',
+//               let: { userId: userId, courseId: '$_id' },
+//               pipeline: [
+//                 {
+//                   $match: {
+//                     $and: [
+//                       { userId: '$$userId' },
+//                       { course_id: '$$courseId' }
+//                     ]
+//                   }
+//                 }
+//               ],
+//               as: 'isWishlist'
+//             }
+//           },
+//           {
+//             $project: {
+//               _id: 1,
+//               title: 1,
+//               description: 1,
+//               instructor: { $concat: ["$instructor.firstName", " ", "$instructor.lastName"] },
+//               instructorPhoto: "$instructor.photo",
+//               isWishlist: { $size: '$isWishlist' }
+//             }
+//           }
+//         ];
+    
+//         const courses = await Course.aggregate(pipeline);
+//         return res.status(200).json(courses)
+
+//     } catch (error) {
+//         console.error('Error fetching courses:', error);
+//         throw error;
+//       }
+
+// })
 export { getAllCourses, createCourse, getEnrolledUsers, getCourseById }

@@ -36,10 +36,14 @@ const userSchema = new Schema({
     avatar: {
         type: String,
     },
+    wishlist_Id:{
+        type: Schema.Types.ObjectId,
+        ref: 'Wishlist'
+    },
     watchHistory: [
         {
             type: Schema.Types.ObjectId,
-            ref: 'course'
+            ref: 'Course'
         }
     ],
     refreshToken: {

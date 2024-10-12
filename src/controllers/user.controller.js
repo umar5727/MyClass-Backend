@@ -196,10 +196,11 @@ const signOut = asyncHandler(async (req, res, next) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
     // const incomingRefreshToken = req.cookies.refreshToken?.refreshToken || req.body.refreshToken
     
-    const {incomingRefreshToken} = req.body
-    // console.log("incomming ", incomingRefreshToken)
+    const {refreshToken } = req.body
+    const incomingRefreshToken = refreshToken
+    console.log("incomming ", incomingRefreshToken)
     if (!incomingRefreshToken) {
-        throw new ApiError(401, "unauthorized request")
+        throw new ApiError(401, "token required")
     }
 
     try {

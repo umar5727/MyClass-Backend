@@ -84,7 +84,6 @@ import { addToWishlist, getWishlist } from "../controllers/wishlist.controller.j
 
 const router = Router()
 
-router.route('/getWishlist').post(verifyJWT, getWishlist)
 router.route('/addToWishlist').post(verifyJWT, addToWishlist)
 
 

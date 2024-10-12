@@ -44,7 +44,7 @@ const courseSchema = new Schema(
         },
         discountPrice: {
             type: Number,
-            // required: true
+            required: true
         },
         approved: {
             type: Boolean,

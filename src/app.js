@@ -49,6 +49,7 @@ import userRouter from "./routes/user.routes.js"
 import dashboardRouter from "./routes/dashboard.routes.js"
 import courseRouter from "./routes/course.routes.js"
 import enrolledRouter from "./routes/enrolled.routes.js"
+import wishlist from "./routes/wishlist.routes.js"
 //routes declaration
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
@@ -56,4 +57,5 @@ app.use("/api/v1/dashboard", dashboardRouter)
 app.use("/api/v1/courses", courseRouter)
 app.use('/api/v1/enrolled', enrolledRouter)
 
+app.use('/api/v1/wishlist', wishlist)
 export { app }

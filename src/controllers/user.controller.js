@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from 'jsonwebtoken'
 import { Wishlist } from "../models/wishlist.model.js";
+import { getWishlist } from "./wishlist.controller.js";
 
 // common function that generate access and refresh token
 const genAccAndRefToken = async (userId) => {
@@ -142,14 +143,15 @@ const login = asyncHandler(async (req, res) => {
     
     const loginUser = await User.findById(currentUser._id).select("-password -refreshToken -accessToken")
    
-    const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
+    // const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
 
-console.log('wishlist ',wishlist)
+// console.log('wishlist ',wishlist)
     const options = {
         httpOnly: true,
         secure: true,
         sameSite: 'none'
     }
+   const wishlist = await getWishlist(loginUser._id)        //getting the wishlist details
     return res
         .status(200)
         .cookie('accessToken', { accessToken, options })
@@ -157,7 +159,7 @@ console.log('wishlist ',wishlist)
         .json(
             new ApiResponse(
                 201,
-                { user: loginUser, wishlist:wishlist.coursesId || '', accessToken, refreshToken },
+                { user: loginUser, wishlist,  accessToken, refreshToken },
                 'login success'
             )
         )
@@ -206,7 +208,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         )
 
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+        const user = await User.findById(decodedToken?._id).select("-password")
 
         if (!user) {
             throw new ApiError(401, "Invalid refresh token")
@@ -214,10 +216,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         if (incomingRefreshToken !== user.refreshToken) {
             throw new ApiError(401, "Refresh token is expired or used")
-
         }
         
-
         const options = {
             httpOnly: true,
             secure: true
@@ -225,8 +225,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         const { accessToken, refreshToken } = await genAccAndRefToken(user._id)
 
-        const updatedUser = await User.findById(user._id)
-        const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
+        const updatedUser = await User.findById(user._id).select('-password -refreshToken -accessToken')
+        const wishlist= await getWishlist(updatedUser._id)
         return res
             .status(200)
             .cookie("accessToken", { accessToken, options })
@@ -234,7 +234,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { user:updatedUser, wishlist:wishlist?.coursesId || '', accessToken, refreshToken },
+                    { user:updatedUser, wishlist, accessToken, refreshToken },
                     "Access token refreshed"
                 )
             )

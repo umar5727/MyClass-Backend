@@ -44,7 +44,7 @@ const addEnrolled = asyncHandler(async (req, res) => {
 
             return res.status(400).json({ message: "user not enrolled " })
         }
-        console.log('enrolles : ', myCourses)
+
         return res.status(200).json({ myCourses, message: "enrolled success" })
     } catch (error) {
         console.log('mycourses error: ', error)
@@ -65,16 +65,17 @@ const totalEnroll = async (courseId) => {
 
 }
 const userCourses = async (req, res) => {
-    console.log('user id from userCourses : ', req.user._id)
+
     try {
-        const myCourses = await Enrolled.find({ enroller: req.user._id }).select('-_id -enroller -createdAt -updatedAt')
-        if (!myCourses) {
-            console.log('user not enrolled  : ', myCourses)
+        const myCoursesList = await Enrolled.find({ enroller: req.user._id }).select('-_id -enroller -updatedAt')
+        if (!myCoursesList) {
+            console.log('user not enrolled  : ', myCoursesList)
 
             return res.status(400).json({ message: "user not enrolled in any course" })
         }
-        console.log('enrolles : ', myCourses)
-        return res.status(200).json({ myCourses, message: "user courses found success" })
+
+        // console.log('enrolles testCourse : ', courseList)
+        return res.status(200).json({ myCourses: myCoursesList, message: "user courses found success" })
     } catch (error) {
         console.log('mycourses error: ', error)
         return res.status(500).json({ message: "internal server error" })

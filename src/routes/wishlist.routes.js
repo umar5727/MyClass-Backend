@@ -80,11 +80,12 @@
 
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { addToWishlist, getWishlist } from "../controllers/wishlist.controller.js";
+import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlist.controller.js";
 
 const router = Router()
 
 router.route('/addToWishlist').post(verifyJWT, addToWishlist)
+router.route('/removeFromWishlist').post(verifyJWT, removeFromWishlist)
 
 
 export default router

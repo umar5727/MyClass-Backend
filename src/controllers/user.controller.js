@@ -7,6 +7,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from 'jsonwebtoken'
 import { Wishlist } from "../models/wishlist.model.js";
 import { getWishlist } from "./wishlist.controller.js";
+import { Enrolled } from "../models/enrolled.model.js";
 
 // common function that generate access and refresh token
 const genAccAndRefToken = async (userId) => {
@@ -22,13 +23,13 @@ const genAccAndRefToken = async (userId) => {
     return { accessToken, refreshToken }
 }
 //get all users 
-const getAllUsers = async(req,res,next) =>{
+const getAllUsers = async (req, res, next) => {
     const users = await User.find().select('fullName email role verified approved');
 
-    if(!users ){
-        return res.status(400).json({message:'users not found'})
+    if (!users) {
+        return res.status(400).json({ message: 'users not found' })
     }
-    return res.status(200).json({users,message:"all user get success"})
+    return res.status(200).json({ users, message: "all user get success" })
 }
 
 //signUp or registration
@@ -71,8 +72,8 @@ const signUp = asyncHandler(async (req, res, next) => {
     // }
     const avatarLocalPath = (!req.files && !req.files.avatar) ? req.files.avatar[0].path : ''
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-   
-  
+
+
 
     const user = await User.create({
         fullName,
@@ -82,22 +83,22 @@ const signUp = asyncHandler(async (req, res, next) => {
         avatar: avatar?.url || ''          //if avatar is present only then adding its url
     })
 
-    
-        try {
-            const wishlist  = new Wishlist({        // creating new wishlist 
-                userId: user._id,
-                
-            })
-            await wishlist.save();
 
-            user.wishlist_Id = wishlist._id     // adding wishlit id to user
-            await user.save();
-            console.log('\nwishlist add to user \n')
-        } catch (error) {
-            console.error('Error creating wishlist:', error);
-            throw error;
-        }
-   
+    try {
+        const wishlist = new Wishlist({        // creating new wishlist 
+            userId: user._id,
+
+        })
+        await wishlist.save();
+
+        user.wishlist_Id = wishlist._id     // adding wishlit id to user
+        await user.save();
+        console.log('\nwishlist add to user \n')
+    } catch (error) {
+        console.error('Error creating wishlist:', error);
+        throw error;
+    }
+
     const createdUser = await User.findById(user._id).select("-password -refreshToken -accessToken")
 
     return res.status(201).json(
@@ -140,18 +141,18 @@ const login = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await genAccAndRefToken(currentUser._id)
 
     // db call 'getting user without password and refresh token'
-    
+
     const loginUser = await User.findById(currentUser._id).select("-password -refreshToken -accessToken")
-   
+
     // const wishlist= await Wishlist.findById(loginUser.wishlist_Id)
 
-// console.log('wishlist ',wishlist)
+    // console.log('wishlist ',wishlist)
     const options = {
         httpOnly: true,
         secure: true,
         sameSite: 'none'
     }
-   const wishlist = await getWishlist(loginUser._id)        //getting the wishlist details
+    const wishlist = await getWishlist(loginUser._id)        //getting the wishlist details
     return res
         .status(200)
         .cookie('accessToken', { accessToken, options })
@@ -159,7 +160,7 @@ const login = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 201,
-                { user: loginUser, wishlist,  accessToken, refreshToken },
+                { user: loginUser, wishlist, accessToken, refreshToken },
                 'login success'
             )
         )
@@ -195,8 +196,8 @@ const signOut = asyncHandler(async (req, res, next) => {
 // refresh accesstoken
 const refreshAccessToken = asyncHandler(async (req, res) => {
     // const incomingRefreshToken = req.cookies.refreshToken?.refreshToken || req.body.refreshToken
-    
-    const {refreshToken } = req.body
+
+    const { refreshToken } = req.body
     const incomingRefreshToken = refreshToken
     console.log("incomming ", incomingRefreshToken)
     if (!incomingRefreshToken) {
@@ -218,7 +219,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         if (incomingRefreshToken !== user.refreshToken) {
             throw new ApiError(401, "Refresh token is expired or used")
         }
-        
+
         const options = {
             httpOnly: true,
             secure: true
@@ -227,7 +228,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const { accessToken, refreshToken } = await genAccAndRefToken(user._id)
 
         const updatedUser = await User.findById(user._id).select('-password -refreshToken -accessToken')
-        const wishlist= await getWishlist(updatedUser._id)
+        const wishlist = await getWishlist(updatedUser._id)
         return res
             .status(200)
             .cookie("accessToken", { accessToken, options })
@@ -235,7 +236,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { user:updatedUser, wishlist, accessToken, refreshToken },
+                    { user: updatedUser, wishlist, accessToken, refreshToken },
                     "Access token refreshed"
                 )
             )
@@ -471,52 +472,39 @@ const instructorProfile = asyncHandler(async (req, res) => {
     return res.status(200).json({ "userCourses": instructorCoursesDetails[0].myCourses, 'message': 'all courses details' })
 })
 
-const userCourses = async (req,res)=>{
-    const {userId} = req.body
-    if(!userId ){
-        return res.status(400).json({message:'user Id required'})
-    }
-    const user = await User.findById(userId)
-    
-    if(!user){
-        return res.status(400).json({message:'user not found'})
-        
-    }
-    const userCourses = await Enrolled.find({enroller:userId})
-    return res.status(200).json({userCourses,message:"user courses found success"})
-}
 
-const updateProfile = async (req,res)=>{
-    
-    const {userId,email,fullName,contactNumber} = req.body
+
+const updateProfile = async (req, res) => {
+
+    const { userId, email, fullName, contactNumber } = req.body
     // console.log('avatar for user controller : ',req.files.avatar[0]?.path)
 
-    if(!userId && !email && !fullName && !req.files.avatar){
-        return res.status(400).json({message:'required a field'})
+    if (!userId && !email && !fullName && !req.files.avatar) {
+        return res.status(400).json({ message: 'required a field' })
     }
 
     const user = await User.findById(userId)
-    if(!user){
-        return res.status(400).json({message:'user not found'})
+    if (!user) {
+        return res.status(400).json({ message: 'user not found' })
     }
-    if(fullName !== ' ' && fullName){
+    if (fullName !== ' ' && fullName) {
         user.fullName = fullName
     }
-    if(email !== ' ' && email){
+    if (email !== ' ' && email) {
         user.email = email
     }
-    if(contactNumber !== ' ' && contactNumber){
+    if (contactNumber !== ' ' && contactNumber) {
         user.contactNumber = email
     }
-    if(req.files && req.files.avatar ){
+    if (req.files && req.files.avatar) {
         const avatar = await uploadOnCloudinary(req.files.avatar[0].path)
         user.avatar = avatar.url
         // console.log('avatar updated',avatar.url)
 
     }
     await user.save()
-    const updatedUser= await User.findById(userId).select('-password')
-// console.log('after update user : ',updatedUser)
-    return res.status(200).json({user:updatedUser, message:'update successful'})
+    const updatedUser = await User.findById(userId).select('-password')
+    // console.log('after update user : ',updatedUser)
+    return res.status(200).json({ user: updatedUser, message: 'update successful' })
 }
-export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile,updateProfile }
+export { getAllUsers, signUp, login, signOut, refreshAccessToken, changeCurrentPassword, updateAccountDetails, updateUserAvatar, forgotPassword, userProfile, instructorProfile, updateProfile }
